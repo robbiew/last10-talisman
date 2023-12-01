@@ -1,5 +1,5 @@
 # Last10-Talisman
-Top 10 Callers Mod for Talisman BBS
+Last 10 Callers Mod for Talisman BBS
 
 ![tal-top10 screenshot](screenshot.png)
 
