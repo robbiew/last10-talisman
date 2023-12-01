@@ -8,7 +8,7 @@ function calculateDisplayTime(callDateTime)
         return "Invalid Date"
     end
 
-    local callYear, callMonth, callDay = callDate:match("(%d+)/(%d+)/(%d+)")
+    local callMonth, callDay, callYear = callDate:match("(%d+)/(%d+)/(%d+)")
     if not (callYear and callMonth and callDay) then
         return "Invalid Date Format"
     end
@@ -58,12 +58,19 @@ function displayLast10Entries()
             username = #username > 15 and username:sub(1, 15) or username
             location = #location > 15 and location:sub(1, 15) or location
             local displayTime = calculateDisplayTime(callDateTime)
+        
+        -- Convert uploads to megabytes and format for 3-digit space
+        local uploadMB = tonumber(totalUploads) / 1048576  -- Convert bytes to MB
+        local uploadDisplay = string.format("%.1f", uploadMB)  -- Format to 1 decimal place
 
-            local output = string.format(" |13%-18s |05%-18s |03%-18s |08%-3d |08%-3d |07%-3s |15%-3d |15%-3d\r\n", 
-                                         username, location, displayTime, totalCalls, 
-                                         totalUploads, totalDownloads, totalMsgPosts, totalDoorsRun)
-            
-            bbs_write_string(output)
+        local downloadMB = tonumber(totalDownloads) / 1048576  -- Convert bytes to MB
+        local downloadDisplay = string.format("%.1f", downloadMB)  -- Format to 1 decimal place
+
+        local output = string.format(" %-18s %-18s %-15s %-4d %-4s %-4d %-4d %-4d\r\n", 
+                                        username, location, displayTime, totalCalls, 
+                                        uploadDisplay, downloadDisplay, totalMsgPosts, totalDoorsRun)
+        
+        bbs_write_string(output)
         end
     end
 end
