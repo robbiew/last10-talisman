@@ -29,10 +29,14 @@ function displayLast10Entries()
     local lastLines = {}
     local numLines = 10
     for line in csvFile:lines() do
-        if #lastLines == numLines then
-            table.remove(lastLines, 1)
+        local username = line:match("([^,]+)") -- Extract the username from the line
+
+        if show_sysop or username ~= sysopname then
+            if #lastLines == numLines then
+                table.remove(lastLines, 1)
+            end
+            table.insert(lastLines, line)
         end
-        table.insert(lastLines, line)
     end
     csvFile:close()
 
@@ -63,6 +67,7 @@ function displayLast10Entries()
         end
     end
 end
+
 
 bbs_display_gfile("last10_hdr")
 displayLast10Entries()
