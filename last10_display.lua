@@ -3,51 +3,19 @@ local show_sysop = false
 ------------------------------------------------------------
 
 function calculateDisplayTime(callDateTime)
-    -- Extract date and time from the callDateTime string
-    local callDate, callTime = callDateTime:match("([^ ]+) ([^ ]+)")
-    if not callDate or not callTime then
-        return "Time Error"
+    local callDate = callDateTime:match("([^ ]+)")
+    if not callDate then
+        return "Invalid Date"
     end
 
-    -- Extract individual date components
-    local callMonth, callDay, callYear = callDate:match("(%d+)/(%d+)/(%d+)")
-    local callHour, callMin, callSec = callTime:match("(%d+):(%d+):(%d+)")
-    if not (callMonth and callDay and callYear and callHour and callMin and callSec) then
-        return "Format Error"
+    local callYear, callMonth, callDay = callDate:match("(%d+)/(%d+)/(%d+)")
+    if not (callYear and callMonth and callDay) then
+        return "Invalid Date Format"
     end
 
-    -- Convert date and time components to numbers
-    callMonth, callDay, callYear, callHour, callMin, callSec = tonumber(callMonth), tonumber(callDay), tonumber(callYear), tonumber(callHour), tonumber(callMin), tonumber(callSec)
-    if not (callMonth and callDay and callYear and callHour and callMin and callSec) then
-        return "Conversion Error"
-    end
-
-    -- Get the current date and time
-    local currentDateTime = os.date("*t")
-
-    -- Compare call date to current date
-    if callDay == currentDateTime.day and callMonth == currentDateTime.month and callYear == currentDateTime.year then
-        -- Call date is today; calculate the time difference in hours and minutes
-        local callTimeInMinutes = callHour * 60 + callMin
-        local currentTimeInMinutes = currentDateTime.hour * 60 + currentDateTime.min
-        local diffInMinutes = currentTimeInMinutes - callTimeInMinutes
-
-        if diffInMinutes < 1 then
-            return "Just now"  -- For calls within the current minute
-        end
-
-        local hours = math.floor(diffInMinutes / 60)
-        local minutes = diffInMinutes % 60
-        local timeString = ""
-        if hours > 0 then timeString = hours .. "h " end
-        if minutes > 0 then timeString = timeString .. minutes .. "m " end
-        return timeString .. "ago"
-    else
-        -- Call date is different; return the date as MM/DD/YYYY
-        return string.format("%02d/%02d/%04d", callMonth, callDay, callYear)
-    end
+    -- Return the date in MM/DD/YY format
+    return string.format("%02d/%02d/%02d", callMonth, callDay, callYear % 100)
 end
-
 
 function displayLast10Entries()
     local sysopname = bbs_get_sysop_name()
