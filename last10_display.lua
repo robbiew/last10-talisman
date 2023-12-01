@@ -66,7 +66,7 @@ function displayLast10Entries()
         local downloadMB = tonumber(totalDownloads) / 1048576  -- Convert bytes to MB
         local downloadDisplay = string.format("%.1f", downloadMB)  -- Format to 1 decimal place
 
-        local output = string.format(" %-18s %-18s %-15s %-4d %-4s %-4d %-4d %-4d\r\n", 
+        local output = string.format(" |11%-18s |13%-18s |05%-15s |08%-4d |08%-4s |07%-4d |15%-4d |15%-4d|07\r\n", 
                                         username, location, displayTime, totalCalls, 
                                         uploadDisplay, downloadDisplay, totalMsgPosts, totalDoorsRun)
         
