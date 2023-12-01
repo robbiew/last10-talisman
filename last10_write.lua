@@ -1,4 +1,4 @@
--- Run this from loginitem.toml, e.g: --
+-- Run this from loginitems.toml, e.g: --
 -- [[loginitem]]                      --
 -- clear_screen = true                --
 -- pause_after = false                --
