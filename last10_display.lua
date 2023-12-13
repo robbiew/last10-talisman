@@ -1,6 +1,10 @@
 -- Set to false if you don't want the sysop included -------
 local show_sysop = false
+local saveFile = "last10.json"
 ------------------------------------------------------------
+
+-- Include the dkjson library
+local json = require "dkjson"
 
 function calculateDisplayTime(callDateTime)
     local callDate = callDateTime:match("([^ ]+)")
@@ -20,64 +24,58 @@ end
 function displayLast10Entries()
     local sysopname = bbs_get_sysop_name()
     local dataPath = bbs_get_data_path()
-    local csvFile = io.open(dataPath .. "/callerData.csv", "r")
-    if not csvFile then
+    local jsonFile = io.open(dataPath .. "/" .. saveFile, "r")
+    if not jsonFile then
         bbs_write_string("Error: Unable to open caller data file.\n")
         return
     end
 
-    local lastLines = {}
-    local numLines = 10
-    for line in csvFile:lines() do
-        local username = line:match("([^,]+)") -- Extract the username from the line
+    local jsonData = jsonFile:read("*a")
+    jsonFile:close()
 
-        if show_sysop or username ~= sysopname then
-            if #lastLines == numLines then
-                table.remove(lastLines, 1)
+    local callers, pos, err = json.decode(jsonData)
+    if err then
+        bbs_write_string("Error decoding JSON: " .. err .. "\n")
+        return
+    end
+
+    local lastCallers = {}
+    local numEntries = 10
+    for _, entry in ipairs(callers) do
+        if show_sysop or entry.username ~= sysopname then
+            if #lastCallers == numEntries then
+                table.remove(lastCallers, 1)
             end
-            table.insert(lastLines, line)
+            table.insert(lastCallers, entry)
         end
     end
-    csvFile:close()
 
-    for _, line in ipairs(lastLines) do
-        local data = {}
-        for value in line:gmatch("([^,]+)") do
-            table.insert(data, value)
-        end
-
-        if #data < 8 then
-            bbs_write_string("Error: Incomplete data in line.\n")
-            break
-        end
-
-        local username, location, callDateTime, totalCalls, totalUploads, totalDownloads, totalMsgPosts, totalDoorsRun = table.unpack(data)
+    for _, entry in ipairs(lastCallers) do
+        local username, location, callDateTime, totalCalls, totalUploads, totalDownloads, totalMsgPosts, totalDoorsRun = 
+            entry.username, entry.location, entry.date, entry.totalCalls, entry.totalUploads, entry.totalDownloads, entry.totalMsgPosts, entry.totalDoorsRun
 
         -- Only display the log if the sysop check passes
         if show_sysop or username ~= sysopname then
-            username = #username > 15 and username:sub(1, 15) or username
-            location = #location > 15 and location:sub(1, 15) or location
+            username = #username > 18 and username:sub(1, 19) or username
+            location = #location > 23 and location:sub(1, 23) or location
             local displayTime = calculateDisplayTime(callDateTime)
-        
-        -- Convert uploads to megabytes and format for 3-digit space
-        local uploadMB = tonumber(totalUploads) / 1048576  -- Convert bytes to MB
-        local uploadDisplay = string.format("%.1f", uploadMB)  -- Format to 1 decimal place
 
-        local downloadMB = tonumber(totalDownloads) / 1048576  -- Convert bytes to MB
-        local downloadDisplay = string.format("%.1f", downloadMB)  -- Format to 1 decimal place
+            local uploadMB = tonumber(totalUploads) / 1048576  -- Convert bytes to MB
+            local uploadDisplay = string.format("%.1f", uploadMB)  -- Format to 1 decimal place
 
-        local output = string.format(" |11%-18s |13%-18s |05%-15s |08%-4d |08%-4s |07%-4d |15%-4d |15%-4d|07\r\n", 
-                                        username, location, displayTime, totalCalls, 
-                                        uploadDisplay, downloadDisplay, totalMsgPosts, totalDoorsRun)
-        
-        bbs_write_string(output)
+            local downloadMB = tonumber(totalDownloads) / 1048576  -- Convert bytes to MB
+            local downloadDisplay = string.format("%.1f", downloadMB)  -- Format to 1 decimal place
+
+            local output = string.format(" |11%-18s |13%-23s |05%-10s |08%-4d |08%-4s |07%-4d |15%-4d |15%-4d|07\r\n", 
+                                            username, location, displayTime, totalCalls, 
+                                            uploadDisplay, downloadDisplay, totalMsgPosts, totalDoorsRun)
+            
+            bbs_write_string(output)
         end
     end
 end
 
-
 bbs_display_gfile("last10_hdr")
 displayLast10Entries()
 bbs_display_gfile("last10_ftr")
-bbs_write_string(" |14Press any key....\r\n|07")
-bbs_getchar()
+bbs_pause()
